@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2019 Deep-Verify Authors.
+# Copyright 2019 DeepMind Technologies Limited.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -85,8 +85,8 @@ class DualFormulation(object):
     """Sets the up dual objective.
 
     Args:
-      verifiable_layers: List of `SingleVerifiableLayer` objects specifying
-        linear layers and non-linear activation functions.
+      verifiable_layers: List of `VerifiableLayer` objects specifying layers
+        that give rise to dual variables.
       labels: 1D integer tensor of shape (batch_size) of labels for each
         input example.
       dual_var_getter: Function(name, shape, dtype) returning a dual variable.

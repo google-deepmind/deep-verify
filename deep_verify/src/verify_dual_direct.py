@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2019 Deep-Verify Authors.
+# Copyright 2019 DeepMind Technologies Limited.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -54,7 +54,8 @@ class DualVerification(snt.AbstractModule):
 
   def _build(self, labels, num_batches, current_batch,
              margin=0.,
-             objective_computation_config=None):
+             objective_computation_config=None,
+             dataset_size=None):
     """Sets the up dual objective for the given network.
 
     Dual variables are allocated for the entire dataset, covering all batches
@@ -69,13 +70,20 @@ class DualVerification(snt.AbstractModule):
       margin: Dual objective values for correct class will be forced to
         `-margin`, thus disregarding large negative bounds when maximising.
       objective_computation_config: Additional parameters for dual obj.
+      dataset_size: Size of dataset across all batches. By default this is
+        inferred from `num_batches * labels.shape[0]`, but can be set explictly
+        if not known at graph build time.
 
     Returns:
       2D tensor of shape (num_targets, batch_size) containing dual objective
         values for each (class, example).
     """
     # Dual variable generation across all batches.
-    batch_size = labels.shape[0]
+    if dataset_size is None:
+      batch_size = labels.shape[0]
+      dataset_size = num_batches * batch_size
+    else:
+      batch_size = tf.shape(labels)[0]
     batch_lo = current_batch * batch_size
     batch_hi = batch_lo + batch_size
 
@@ -83,11 +91,10 @@ class DualVerification(snt.AbstractModule):
       """Creates a trainable tf.Variable for each dual variables."""
       dual_var = self._get_dual_variable(name=name,
                                          dtype=dtype,
-                                         shape=(shape[:1] +
-                                                [num_batches * batch_size] +
+                                         shape=(shape[:1] + [dataset_size] +
                                                 shape[2:]))
       # Return directly the tf.Variable if possible.
-      if num_batches == 1:
+      if dataset_size == batch_size:
         return dual_var
       # Select correct slice of dual variables for current batch.
       sliced = dual_var[:, batch_lo:batch_hi]

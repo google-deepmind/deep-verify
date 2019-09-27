@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2019 Deep-Verify Authors.
+# Copyright 2019 DeepMind Technologies Limited.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,6 +25,31 @@ import operator
 import interval_bound_propagation as ibp
 import sonnet as snt
 import tensorflow as tf
+
+
+def with_explicit_update(volatile_value):
+  """Wraps the volatile value in a variable to cache a stationary copy of it.
+
+  Args:
+    volatile_value: Volatile tensor value to hold still; may be nested.
+
+  Returns:
+    materialised_value: Non-trainable variable (or nest thereof) to hold a
+      stationary copy of the tensor.
+    update_op: Operation to update the cache by reevaluating the tensor.
+  """
+  def materialise(value):
+    """Returns a non-trainable variable to shadow the given volatile tensor."""
+    return tf.get_variable(value.name.replace(':', '__') + '_materialised',
+                           shape=value.shape,
+                           dtype=value.dtype,
+                           trainable=False)
+
+  nest = tf.contrib.framework.nest
+  materialised_value = nest.map_structure(materialise, volatile_value)
+  update_op = tf.group(nest.flatten(
+      nest.map_structure(tf.assign, materialised_value, volatile_value)))
+  return materialised_value, update_op
 
 
 def targeted_objective(final_w, final_b, labels):

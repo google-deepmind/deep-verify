@@ -1,5 +1,5 @@
 # coding=utf-8
-# Copyright 2019 Deep-Verify Authors.
+# Copyright 2019 DeepMind Technologies Limited.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,6 +34,8 @@ from deep_verify.src.bounds.layer_bounds import BoundPropagation
 from deep_verify.src.bounds.naive_bounds import input_bounds
 from deep_verify.src.bounds.naive_bounds import IntervalBounds
 from deep_verify.src.bounds.naive_bounds import NaiveBoundPropagation
+
+from deep_verify.src.common import with_explicit_update
 
 from deep_verify.src.formulations.semidefinite import gram_calcs
 from deep_verify.src.formulations.semidefinite.verify_dual_semidefinite import SemidefiniteDualFormulation
