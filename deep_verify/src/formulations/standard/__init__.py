@@ -13,7 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Standard dual formulation of verification."""
+"""Standard dual formulation of verification.
+
+This module implements the standard formulation of verifiable robustness as
+a Lagrangian dual problem, by introducing Lagrange multipliers (dual variables)
+for the calculation of each layer of the network.
+
+See section 3.4 of the paper: "A Dual Approach to Scalable Verification
+of Deep Networks.", https://arxiv.org/abs/1803.06567.
+"""
 
 from __future__ import absolute_import
 from __future__ import division

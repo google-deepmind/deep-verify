@@ -13,7 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Fastlin bound calculation for common neural network layers."""
+"""Fast-Lin bound calculation for common neural network layers.
+
+The Fast-Lin algorithm expresses lower and upper bounds of each layer of
+a neural network as a symbolic linear expression in the input neurons,
+relaxing the ReLU layers to retain linearity at the expense of tightness.
+
+Reference: "Towards Fast Computation of Certified Robustness for ReLU Networks",
+https://arxiv.org/pdf/1804.09699.pdf.
+"""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -32,8 +40,8 @@ class SymbolicBounds(ibp.SymbolicBounds):
     super(SymbolicBounds, self).__init__(lower, upper)
     self._nominal = nominal
 
-  @staticmethod
-  def convert(bounds):
+  @classmethod
+  def convert(cls, bounds):
     if isinstance(bounds, SymbolicBounds):
       return bounds
 

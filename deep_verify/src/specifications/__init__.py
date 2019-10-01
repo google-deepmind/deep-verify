@@ -13,7 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Primal objective specifications."""
+"""Primal objective specifications.
+
+This module defines the interface for specifying the property to be verified
+on the outputs of the network. It also provides a standard implementation
+for a classifier, in which the specification is that the largest logit output
+is that of the true class.
+
+See section 3.2 of the paper: "A Dual Approach to Scalable Verification
+of Deep Networks.", https://arxiv.org/abs/1803.06567.
+"""
 
 from __future__ import absolute_import
 from __future__ import division

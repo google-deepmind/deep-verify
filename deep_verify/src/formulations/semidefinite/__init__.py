@@ -13,7 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Semidefinite verification formulation."""
+"""Semidefinite verification formulation.
+
+Going beyond the 'standard' formulation (`src.formulations.standard`), this
+module implements a tighter Lagrangian relaxation based on semidefinite
+programming.
+
+For more details see paper: "Efficient Neural Network Verification with
+Exactness Characterization.",
+http://auai.org/uai2019/proceedings/papers/164.pdf.
+"""
 
 from __future__ import absolute_import
 from __future__ import division

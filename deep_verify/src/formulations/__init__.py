@@ -13,7 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Dual formulations of verification."""
+"""Dual formulations of verification.
+
+This module defines the interface for layer-wise formulations of verifiable
+robustness that involve optimising dual variables (such as Lagrange multipliers)
+associated with the layers.
+
+For more details see paper: "A Dual Approach to Scalable Verification
+of Deep Networks.", https://arxiv.org/abs/1803.06567.
+"""
 
 from __future__ import absolute_import
 from __future__ import division

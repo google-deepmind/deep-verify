@@ -13,7 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Test template for dual formulations."""
+"""Test template for dual formulations.
+
+`verify_dual_base_test.DualFormulationTest` provides a base test case, which
+may be sub-classed to allow new formulations to be tested against standard
+network architectures.
+
+For more details see paper: "A Dual Approach to Scalable Verification
+of Deep Networks.", https://arxiv.org/abs/1803.06567.
+"""
 
 from __future__ import absolute_import
 from __future__ import division

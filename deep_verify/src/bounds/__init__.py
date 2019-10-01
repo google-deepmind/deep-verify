@@ -13,7 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""IBP (interval bound propagation) extensions for dual verification."""
+"""IBP (interval bound propagation) extensions for dual verification.
+
+Although the IBP library already provides both interval and symbolic bound
+implementations, some of the dual verification computations are sensitive to
+loss of accuracy from subtracting similar quantities, especially when very
+small intervals are involved.
+
+This sub-module provides alternative bound implementations that represent
+the lower and upper bounds of an interval relative to some nominal value
+within the interval, avoiding catastrophic loss of precision.
+
+See section 6.1 of the paper: "A Dual Approach to Scalable Verification
+of Deep Networks.", https://arxiv.org/abs/1803.06567.
+"""
 
 from __future__ import absolute_import
 from __future__ import division
