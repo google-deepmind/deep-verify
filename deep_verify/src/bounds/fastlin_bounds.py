@@ -42,7 +42,7 @@ class SymbolicBounds(ibp.SymbolicBounds):
 
   @classmethod
   def convert(cls, bounds):
-    if isinstance(bounds, SymbolicBounds):
+    if isinstance(bounds, cls):
       return bounds
 
     if isinstance(bounds, tf.Tensor):
@@ -52,8 +52,7 @@ class SymbolicBounds(ibp.SymbolicBounds):
       bounds = ibp.IntervalBounds(bounds.lower, bounds.upper)
 
     symbolic_bounds = ibp.SymbolicBounds.convert(bounds)
-    return SymbolicBounds(symbolic_bounds.lower, symbolic_bounds.upper,
-                          nominal)
+    return cls(symbolic_bounds.lower, symbolic_bounds.upper, nominal)
 
   def apply_batch_reshape(self, wrapper, shape):
     bounds_out = super(SymbolicBounds, self).apply_batch_reshape(wrapper, shape)
