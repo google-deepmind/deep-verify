@@ -104,7 +104,6 @@ class ConcretizedBounds(ibp.IntervalBounds):
   def __init__(self, lower, upper, nominal):
     super(ConcretizedBounds, self).__init__(lower, upper)
     self._nominal = nominal
-    self._update_cached_bounds_op = None
 
   @property
   def nominal(self):
@@ -119,11 +118,6 @@ class ConcretizedBounds(ibp.IntervalBounds):
   def upper_rel(self):
     """Returns upper bounds, expressed relative to nominal values."""
     return self.upper - self.nominal
-
-  def _set_up_cache(self):
-    self._lower, update_lower_op = self._cache_with_update_op(self._lower)
-    self._upper, update_upper_op = self._cache_with_update_op(self._upper)
-    return tf.group([update_lower_op, update_upper_op])
 
 
 class FastlinBoundPropagation(layer_bounds.BoundPropagation):

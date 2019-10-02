@@ -34,7 +34,6 @@ class IntervalBounds(ibp.AbstractBounds):
     self._lower_rel = lower_rel
     self._upper_rel = upper_rel
     self._nominal = nominal
-    self._update_cached_bounds_op = None
 
   @property
   def lower_rel(self):
