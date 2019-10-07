@@ -22,7 +22,6 @@ from __future__ import print_function
 from absl.testing import parameterized
 from deep_verify.src import common
 from deep_verify.src.formulations.standard import standard_layer_calcs
-import interval_bound_propagation as ibp
 import numpy as np
 import sonnet as snt
 import tensorflow as tf
@@ -241,68 +240,6 @@ class StandardLayerCalcsTest(tf.test.TestCase, parameterized.TestCase):
         w, b, padding, strides, lam_in, mu_out, lb, ub)
 
     with self.test_session() as session:
-      dual_obj_val, dual_obj_lin_val = session.run((dual_obj, dual_obj_lin))
-      self.assertAllClose(dual_obj_val, dual_obj_lin_val, atol=tol, rtol=tol)
-
-  @parameterized.named_parameters(
-      ('float32_snt', snt.BatchNorm, tf.float32, 1.e-5, False),
-      ('float64_snt', snt.BatchNorm, tf.float64, 1.e-8, False),
-      ('float32', ibp.BatchNorm, tf.float32, 1.e-5, False),
-      ('float64', ibp.BatchNorm, tf.float64, 1.e-8, False),
-      ('float32_train', ibp.BatchNorm, tf.float32, 1.e-5, True),
-      ('float64_train', ibp.BatchNorm, tf.float64, 1.e-8, True))
-  def test_batchnorm_layer_dual_objective(self, batchnorm_class, dtype, tol,
-                                          is_training):
-    num_classes = 3
-    batch_size = 53
-    input_size = 7
-    output_size = 5
-
-    mu_out = tf.random_normal(dtype=dtype, shape=(
-        num_classes, batch_size, output_size))
-    lb = tf.random_normal(dtype=dtype, shape=(batch_size, input_size))
-    ub = tf.random_normal(dtype=dtype, shape=(batch_size, input_size))
-    lb, ub = tf.minimum(lb, ub), tf.maximum(lb, ub)
-
-    # Linear layer.
-    w = tf.random_normal(dtype=dtype, shape=(input_size, output_size))
-    b = tf.random_normal(dtype=dtype, shape=(output_size,))
-
-    # Batch norm layer.
-    epsilon = 1.e-2
-    bn_initializers = {
-        snt.BatchNorm.BETA: tf.random_normal_initializer(),
-        snt.BatchNorm.GAMMA: tf.random_uniform_initializer(.1, 3.),
-        snt.BatchNorm.MOVING_MEAN: tf.random_normal_initializer(),
-        snt.BatchNorm.MOVING_VARIANCE: tf.random_uniform_initializer(.1, 3.)
-    }
-    batchnorm_module = batchnorm_class(offset=True, scale=True, eps=epsilon,
-                                       initializers=bn_initializers)
-    # Need to connect the batchnorm module to the graph.
-    batchnorm_module(tf.random_normal(dtype=dtype,
-                                      shape=(batch_size, output_size)),
-                     is_training=is_training)
-
-    # Calculate dual objective contribution of linear layer with batch norm.
-    dual_obj, mu_bn = standard_layer_calcs.batchnorm_layer_dual_objective(
-        batchnorm_module, mu_out)
-    activation_coeffs = -tf.tensordot(mu_bn, tf.transpose(w), axes=1)
-    dual_obj_bias = -tf.tensordot(mu_bn, b, axes=1)
-    dual_obj += standard_layer_calcs.linear_dual_objective(
-        None, activation_coeffs, dual_obj_bias, lb, ub)
-
-    # Separately, calculate dual objective by adjusting the linear layer.
-    wn, bn = common.combine_with_batchnorm(w, b, batchnorm_module)
-    activation_coeffs_lin = -tf.tensordot(mu_out, tf.transpose(wn), axes=1)
-    dual_obj_bias_lin = -tf.tensordot(mu_out, bn, axes=1)
-    dual_obj_lin = standard_layer_calcs.linear_dual_objective(
-        None, activation_coeffs_lin, dual_obj_bias_lin, lb, ub)
-
-    init_op = tf.global_variables_initializer()
-
-    with self.test_session() as session:
-      session.run(init_op)
-      # Verify that both methods give the same result.
       dual_obj_val, dual_obj_lin_val = session.run((dual_obj, dual_obj_lin))
       self.assertAllClose(dual_obj_val, dual_obj_lin_val, atol=tol, rtol=tol)
 

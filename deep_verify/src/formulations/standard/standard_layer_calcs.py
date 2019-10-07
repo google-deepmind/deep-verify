@@ -231,36 +231,6 @@ def linear_dual_objective(lam_in, activation_coeffs, dual_obj_bias, lb, ub,
                                     inverse_temperature=inverse_temperature)
 
 
-def batchnorm_layer_dual_objective(batchnorm_module, mu_out):
-  """Calculates the dual objective contribution for a batch norm layer.
-
-  This contribution arises because the batch norm's shifts will effectively
-  amend the previous layer's biases.
-
-  Also returns a rescaled version of `mu_out`, which should be used as the
-  input to the call to xxx_layer_dual_objective for the layer upon which the
-  batch norm acts.
-
-  Args:
-    batchnorm_module: `snt.BatchNorm` module.
-    mu_out: 3D tensor of shape (num_classes, batch_size, output_size)
-      or 5D tensor of shape (num_classes, batch_size, output_height,
-      output_width, output_channels) containing Lagrange multipliers
-      for the output neurons.
-
-  Returns:
-    dual_obj: 2D tensor of shape (num_classes, batch_size) containing dual
-      objective contribution from the batch norm for each example.
-    mu_bn: Tensor of same shape as `mu_out` that has been scaled according to
-      the batch norm.
-  """
-  w_bn, b_bn = common.decode_batchnorm(batchnorm_module)
-  mu_bn = w_bn * mu_out
-  dual_obj = -tf.reduce_sum(b_bn * mu_out,
-                            axis=list(range(2, mu_out.shape.ndims)))
-  return dual_obj, mu_bn
-
-
 def _prod(lst):
   return functools.reduce(operator.mul, lst, 1)
 

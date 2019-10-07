@@ -832,33 +832,3 @@ def combine_with_batchnorm(w, b, batchnorm_module):
 
   w_bn, b_bn = decode_batchnorm(batchnorm_module)
   return w * w_bn, b * w_bn + b_bn
-
-
-def average_over_sequence(denom_for_avg, x, axis=1):
-  """Averages out the given axis, respecting example-specific denominator.
-
-  In what follows, Q is the number of dimensions of the layer (excluding batch
-  dimension), and P is the number of dimensions of the
-
-  Args:
-    denom_for_avg: Divisor to apply after a `reduce_sum(x, axis=1)` operation.
-      For inputs of shape (batch_size, max_sequence_length, input_channels),
-      this will be a 2D tensor of shape (batch_size, 1).
-    x: Tensor of shape (batch_size, ..., max_sequence_length, input_channels)
-      where `max_sequence_length` is the dimension at position `axis`.
-      The batch_size dimension is optional.
-    axis: Axis of `x` (counted assuming its optional batch dimension is
-      present) to average over. Must be at least 1.
-
-  Returns:
-    Average of `x` along the sequence dimension.
-  """
-  if x.shape.ndims < axis + denom_for_avg.shape.ndims:
-    # x has no batch dimension.
-    return tf.reduce_mean(x, axis=(axis-1))
-
-  # Average over sequence (first spatial) dimension, honouring length.
-  denom = denom_for_avg
-  for _ in range(axis-1):
-    denom = tf.expand_dims(denom, axis=1)
-  return tf.reduce_sum(x, axis=axis) / denom

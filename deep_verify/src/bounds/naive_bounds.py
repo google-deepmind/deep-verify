@@ -19,7 +19,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from deep_verify.src import common
 from deep_verify.src.bounds import layer_bounds
 import interval_bound_propagation as ibp
 import sonnet as snt
@@ -76,22 +75,6 @@ class IntervalBounds(ibp.AbstractBounds):
     reshape = snt.BatchReshape(shape)
     return IntervalBounds(reshape(self.lower_rel), reshape(self.upper_rel),
                           reshape(self.nominal))
-
-  def apply_sequence_average(self, denom_for_avg):
-    """Propagates the bounds through a sequence average layer.
-
-    Args:
-      denom_for_avg: Divisor to apply after a `reduce_sum(x, axis=1)` operation.
-        For inputs of shape (batch_size, max_sequence_length, input_channels),
-        this will be a 2D tensor of shape (batch_size, 1).
-
-    Returns:
-      Output bounds.
-    """
-    return IntervalBounds(
-        common.average_over_sequence(denom_for_avg, self.lower_rel),
-        common.average_over_sequence(denom_for_avg, self.upper_rel),
-        common.average_over_sequence(denom_for_avg, self.nominal))
 
   def apply_linear(self, wrapper, w, b):
     """Propagates the bounds through a linear layer.
@@ -164,10 +147,6 @@ class IntervalBounds(ibp.AbstractBounds):
 
     return IntervalBounds(lb, ub, nominal_out)
 
-  def apply_avgpool(self, module, kernel_shape, strides):
-    return IntervalBounds(module(self.lower_rel), module(self.upper_rel),
-                          module(self.nominal))
-
   def apply_increasing_monotonic_fn(self, wrapper, fn, *args, **parameters):
     """Propagates the bounds through a non-linear activation layer or `add` op.
 
@@ -183,7 +162,7 @@ class IntervalBounds(ibp.AbstractBounds):
     Returns:
       Output bounds.
     """
-    if fn.__name__ in ('add', 'reduce_mean', 'avg_pool'):
+    if fn.__name__ in ('add', 'reduce_mean', 'reduce_sum', 'avg_pool'):
       return IntervalBounds(
           fn(self.lower_rel, *[bounds.lower_rel for bounds in args]),
           fn(self.upper_rel, *[bounds.upper_rel for bounds in args]),
@@ -208,13 +187,6 @@ class IntervalBounds(ibp.AbstractBounds):
                                    nominal_in=self.nominal,
                                    parameters=parameters)
       return IntervalBounds(lb, ub, nominal_out)
-
-  def apply_maxpool(self, module, kernel_shape, strides):
-    nominal_out = module(self.nominal)
-    lb, ub = maxpool_bounds(module, kernel_shape, strides,
-                            self.lower_rel, self.upper_rel,
-                            nominal_in=self.nominal, nominal_out=nominal_out)
-    return IntervalBounds(lb, ub, nominal=nominal_out)
 
   def apply_batch_norm(self, wrapper, mean, variance, scale, bias, epsilon):
     """Propagates the bounds through a batch norm layer.
