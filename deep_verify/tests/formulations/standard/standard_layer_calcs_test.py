@@ -22,6 +22,7 @@ from __future__ import print_function
 from absl.testing import parameterized
 from deep_verify.src import common
 from deep_verify.src.formulations.standard import standard_layer_calcs
+from interval_bound_propagation import layer_utils
 import numpy as np
 import sonnet as snt
 import tensorflow as tf
@@ -563,8 +564,8 @@ def _materialised_conv_layer_dual_objective(w, b, padding, strides,
   mu_out_flat = snt.BatchFlatten(preserve_dims=2)(mu_out)
 
   # Materialise the convolution as a (sparse) fully connected linear layer.
-  w_flat, b_flat = common.materialise_conv(w, b, lb.shape[1:].as_list(),
-                                           padding=padding, strides=strides)
+  w_flat, b_flat = layer_utils.materialise_conv(
+      w, b, lb.shape[1:].as_list(), padding=padding, strides=strides)
 
   activation_coeffs = -tf.tensordot(mu_out_flat, tf.transpose(w_flat), axes=1)
   dual_obj_bias = -tf.tensordot(mu_out_flat, b_flat, axes=1)

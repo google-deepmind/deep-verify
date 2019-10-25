@@ -322,7 +322,7 @@ class StandardDualFormulation(verify_dual_base.DualFormulation,
     return standard_layer_calcs.linear_dual_objective(
         dual_vars_lm1,
         activation_coeffs, dual_obj_bias,
-        layer.input_bounds.lower_rel, layer.input_bounds.upper_rel,
+        layer.input_bounds.lower_offset, layer.input_bounds.upper_offset,
         inverse_temperature=self._inverse_temperature)
 
   def nonlinear_layer_contrib(self, layer, dual_vars_lm1, *dual_vars):
@@ -347,15 +347,15 @@ class StandardDualFormulation(verify_dual_base.DualFormulation,
   def visit_activation(self, layer, mu_lm1, lam_l):
     return standard_layer_calcs.activation_layer_dual_objective(
         layer.module, mu_lm1, lam_l,
-        layer.input_bounds.lower_rel, layer.input_bounds.upper_rel,
+        layer.input_bounds.lower_offset, layer.input_bounds.upper_offset,
         nominal=layer.input_bounds.nominal, parameters=layer.parameters,
         inverse_temperature=self._inverse_temperature)
 
   def visit_maxpool(self, layer, mu_lm1, lam_l):
     self._ensure_no_temperature()
     return standard_layer_calcs.maxpool_layer_dual_objective(
-        layer.module, mu_lm1, lam_l,
-        layer.input_bounds.lower_rel, layer.input_bounds.upper_rel,
+        layer.kernel_shape, layer.strides, layer.with_relu, mu_lm1, lam_l,
+        layer.input_bounds.lower_offset, layer.input_bounds.upper_offset,
         nominal=layer.input_bounds.nominal)
 
   def _ensure_no_temperature(self):

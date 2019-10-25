@@ -23,12 +23,13 @@ import abc
 
 from absl import logging
 from deep_verify.src.specifications import target_objective_standard
+import six
 import tensorflow as tf
 
 
+@six.add_metaclass(abc.ABCMeta)
 class DualFormulation(object):
   """Specifies which dual variables exist for which layers."""
-  __metaclass__ = abc.ABCMeta
 
   @abc.abstractmethod
   def group_layers(self, verifiable_layers):

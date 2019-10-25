@@ -20,8 +20,8 @@ from __future__ import division
 from __future__ import print_function
 
 from absl.testing import parameterized
-from deep_verify.src import common
 from deep_verify.src.formulations.semidefinite import gram_calcs
+from interval_bound_propagation import layer_utils
 import sonnet as snt
 import tensorflow as tf
 
@@ -57,8 +57,8 @@ def conv_weighted_gram_abs_projection_slow(w, d, beta, padding, strides):
   flatten = snt.BatchFlatten(preserve_dims=2)
   unflatten = snt.BatchReshape(input_shape, preserve_dims=2)
 
-  w_lin, _ = common.materialise_conv(w, None, input_shape,
-                                     padding, strides)
+  w_lin, _ = layer_utils.materialise_conv(w, None, input_shape,
+                                          padding, strides)
   return unflatten(linear_weighted_gram_abs_projection_slow(w_lin,
                                                             flatten(d),
                                                             flatten(beta)))

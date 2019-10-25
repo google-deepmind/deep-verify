@@ -21,10 +21,12 @@ from __future__ import print_function
 
 import abc
 
+import six
 
+
+@six.add_metaclass(abc.ABCMeta)
 class BoundPropagation(object):
   """Method for propagating bounds through the layers."""
-  __metaclass__ = abc.ABCMeta
 
   def propagate_bounds(self, network, in_bounds):
     """Calculates bounds on each layer.

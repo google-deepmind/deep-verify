@@ -20,6 +20,7 @@ from __future__ import division
 from __future__ import print_function
 
 from deep_verify.src import common
+from interval_bound_propagation import layer_utils
 import numpy as np
 import tensorflow as tf
 
@@ -62,7 +63,7 @@ def conv_weighted_gram_matrix(w, d, input_shape, padding, strides,
   # We wish to combine W with itself at different kernel offsets,
   # from -kernel_size to +kernel_size (exclusive).
   # Achieve this by considering W (kernel) as a new stride-1 deconvolution.
-  w_offset, _ = common.materialise_conv(
+  w_offset, _ = layer_utils.materialise_conv(
       tf.reverse(w, axis=list(range(n))), None,
       input_shape=(enlarged_kernel_shape + [-1]),
       padding='VALID', strides=(n*[1]))

@@ -25,6 +25,8 @@ from deep_verify.src.bounds import naive_bounds
 from deep_verify.src.formulations.standard import standard_layer_calcs
 from deep_verify.src.formulations.standard import verify_dual_standard
 from deep_verify.tests.formulations import verify_dual_base_test
+import interval_bound_propagation as ibp
+from interval_bound_propagation import layer_utils
 import sonnet as snt
 import tensorflow as tf
 
@@ -59,9 +61,9 @@ class VerifyDualStandardTest(verify_dual_base_test.DualFormulationTest):
     linear_0_lb, linear_0_ub = self._expected_input_bounds(image_data.image, .1)
     linear_0_lb = snt.BatchFlatten()(linear_0_lb)
     linear_0_ub = snt.BatchFlatten()(linear_0_ub)
-    relu_1_lb, relu_1_ub = naive_bounds.linear_bounds(
-        linear_0.module.w, linear_0.module.b,
-        linear_0_lb, linear_0_ub)
+    relu_1_lb, relu_1_ub = ibp.IntervalBounds(
+        linear_0_lb, linear_0_ub).apply_linear(
+            None, linear_0.module.w, linear_0.module.b)
 
     # Expected objective value.
     objective = 0
@@ -96,14 +98,14 @@ class VerifyDualStandardTest(verify_dual_base_test.DualFormulationTest):
 
     # Expected input bounds for each layer.
     conv2d_0_lb, conv2d_0_ub = self._expected_input_bounds(image_data.image, .1)
-    relu_1_lb, relu_1_ub = naive_bounds.conv2d_bounds(
-        conv2d_0.module.w, conv2d_0.module.b, 'VALID', (1, 1),
-        conv2d_0_lb, conv2d_0_ub)
+    relu_1_lb, relu_1_ub = ibp.IntervalBounds(
+        conv2d_0_lb, conv2d_0_ub).apply_conv2d(
+            None, conv2d_0.module.w, conv2d_0.module.b, 'VALID', (1, 1))
     linear_2_lb = snt.BatchFlatten()(tf.nn.relu(relu_1_lb))
     linear_2_ub = snt.BatchFlatten()(tf.nn.relu(relu_1_ub))
-    relu_3_lb, relu_3_ub = naive_bounds.linear_bounds(
-        linear_2.module.w, linear_2.module.b,
-        linear_2_lb, linear_2_ub)
+    relu_3_lb, relu_3_ub = ibp.IntervalBounds(
+        linear_2_lb, linear_2_ub).apply_linear(
+            None, linear_2.module.w, linear_2.module.b)
 
     # Expected objective value.
     objective = 0
@@ -149,18 +151,18 @@ class VerifyDualStandardTest(verify_dual_base_test.DualFormulationTest):
 
     # Expected input bounds for each layer.
     conv2d_0_lb, conv2d_0_ub = self._expected_input_bounds(image_data.image, .1)
-    conv2d_0_w, conv2d_0_b = common.combine_with_batchnorm(
+    conv2d_0_w, conv2d_0_b = layer_utils.combine_with_batchnorm(
         conv2d_0.module.w, None, conv2d_0.batch_norm)
-    relu_1_lb, relu_1_ub = naive_bounds.conv2d_bounds(
-        conv2d_0_w, conv2d_0_b, 'VALID', (1, 1),
-        conv2d_0_lb, conv2d_0_ub)
+    relu_1_lb, relu_1_ub = ibp.IntervalBounds(
+        conv2d_0_lb, conv2d_0_ub).apply_conv2d(
+            None, conv2d_0_w, conv2d_0_b, 'VALID', (1, 1))
     linear_2_lb = snt.BatchFlatten()(tf.nn.relu(relu_1_lb))
     linear_2_ub = snt.BatchFlatten()(tf.nn.relu(relu_1_ub))
-    linear_2_w, linear_2_b = common.combine_with_batchnorm(
+    linear_2_w, linear_2_b = layer_utils.combine_with_batchnorm(
         linear_2.module.w, None, linear_2.batch_norm)
-    relu_3_lb, relu_3_ub = naive_bounds.linear_bounds(
-        linear_2_w, linear_2_b,
-        linear_2_lb, linear_2_ub)
+    relu_3_lb, relu_3_ub = ibp.IntervalBounds(
+        linear_2_lb, linear_2_ub).apply_linear(
+            None, linear_2_w, linear_2_b)
 
     # Expected objective value.
     objective = 0
@@ -206,9 +208,9 @@ class VerifyDualStandardTest(verify_dual_base_test.DualFormulationTest):
 
     # Expected input bounds for each layer.
     conv2d_0_lb, conv2d_0_ub = self._expected_input_bounds(image_data.image, .1)
-    relu_1_lb, relu_1_ub = naive_bounds.conv2d_bounds(
-        conv2d_0.module.w, conv2d_0.module.b, 'SAME', (1, 1),
-        conv2d_0_lb, conv2d_0_ub)
+    relu_1_lb, relu_1_ub = ibp.IntervalBounds(
+        conv2d_0_lb, conv2d_0_ub).apply_conv2d(
+            None, conv2d_0.module.w, conv2d_0.module.b, 'SAME', (1, 1))
     avgpool_2_lb = tf.nn.relu(relu_1_lb)
     avgpool_2_ub = tf.nn.relu(relu_1_ub)
     relu_3_lb = tf.nn.avg_pool(avgpool_2_lb, ksize=[2, 2],
@@ -262,9 +264,9 @@ class VerifyDualStandardTest(verify_dual_base_test.DualFormulationTest):
 
     # Expected input bounds for each layer.
     conv2d_0_lb, conv2d_0_ub = self._expected_input_bounds(image_data.image, .1)
-    relu_1_lb, relu_1_ub = naive_bounds.conv2d_bounds(
-        conv2d_0.module.w, conv2d_0.module.b, 'SAME', (1, 1),
-        conv2d_0_lb, conv2d_0_ub)
+    relu_1_lb, relu_1_ub = ibp.IntervalBounds(
+        conv2d_0_lb, conv2d_0_ub).apply_conv2d(
+            None, conv2d_0.module.w, conv2d_0.module.b, 'SAME', (1, 1))
 
     # Expected objective value.
     objective = 0

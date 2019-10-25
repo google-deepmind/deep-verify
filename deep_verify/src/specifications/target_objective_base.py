@@ -21,10 +21,12 @@ from __future__ import print_function
 
 import abc
 
+import six
 
+
+@six.add_metaclass(abc.ABCMeta)
 class TargetObjective(object):
   """Specifies the target objective to be minimized."""
-  __metaclass__ = abc.ABCMeta
 
   @abc.abstractmethod
   def target_objective(self, final_w, final_b, labels):

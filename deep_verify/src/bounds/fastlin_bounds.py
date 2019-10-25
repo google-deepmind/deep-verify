@@ -29,95 +29,6 @@ from __future__ import print_function
 
 from deep_verify.src.bounds import layer_bounds
 import interval_bound_propagation as ibp
-import sonnet as snt
-import tensorflow as tf
-
-
-class SymbolicBounds(ibp.SymbolicBounds):
-  """Upper and lower bounds, as linear expressions in the original inputs."""
-
-  def __init__(self, lower, upper, nominal):
-    super(SymbolicBounds, self).__init__(lower, upper)
-    self._nominal = nominal
-
-  @classmethod
-  def convert(cls, bounds):
-    if isinstance(bounds, cls):
-      return bounds
-
-    if isinstance(bounds, tf.Tensor):
-      nominal = bounds
-    else:
-      nominal = bounds.nominal
-      bounds = ibp.IntervalBounds(bounds.lower, bounds.upper)
-
-    symbolic_bounds = ibp.SymbolicBounds.convert(bounds)
-    return cls(symbolic_bounds.lower, symbolic_bounds.upper, nominal)
-
-  def apply_batch_reshape(self, wrapper, shape):
-    bounds_out = super(SymbolicBounds, self).apply_batch_reshape(wrapper, shape)
-    nominal_out = snt.BatchReshape(shape)(self._nominal)
-    return SymbolicBounds(bounds_out.lower, bounds_out.upper,
-                          nominal_out).with_priors(wrapper.output_bounds)
-
-  def apply_linear(self, wrapper, w, b):
-    bounds_out = super(SymbolicBounds, self).apply_linear(wrapper, w, b)
-
-    nominal_out = tf.matmul(self._nominal, w)
-    if b is not None:
-      nominal_out += b
-
-    return SymbolicBounds(bounds_out.lower, bounds_out.upper,
-                          nominal_out).with_priors(wrapper.output_bounds)
-
-  def apply_conv2d(self, wrapper, w, b, padding, strides):
-    bounds_out = super(SymbolicBounds, self).apply_conv2d(wrapper, w, b,
-                                                          padding, strides)
-
-    nominal_out = tf.nn.convolution(self._nominal, w,
-                                    padding=padding, strides=strides)
-    if b is not None:
-      nominal_out += b
-
-    return SymbolicBounds(bounds_out.lower, bounds_out.upper,
-                          nominal_out).with_priors(wrapper.output_bounds)
-
-  def apply_increasing_monotonic_fn(self, wrapper, fn, *args, **parameters):
-    bounds_out = super(SymbolicBounds, self).apply_increasing_monotonic_fn(
-        wrapper, fn, *args, **parameters)
-    nominal_out = fn(self._nominal)
-    return SymbolicBounds(bounds_out.lower, bounds_out.upper,
-                          nominal_out).with_priors(wrapper.output_bounds)
-
-  def concretize(self):
-    """Concretize activation bounds."""
-    if self._concretized is None:
-      concrete = super(SymbolicBounds, self).concretize()
-      self._concretized = ConcretizedBounds(concrete.lower, concrete.upper,
-                                            self._nominal)
-    return self._concretized
-
-
-class ConcretizedBounds(ibp.IntervalBounds):
-  """Concretised interval bounds with nominals."""
-
-  def __init__(self, lower, upper, nominal):
-    super(ConcretizedBounds, self).__init__(lower, upper)
-    self._nominal = nominal
-
-  @property
-  def nominal(self):
-    return self._nominal
-
-  @property
-  def lower_rel(self):
-    """Returns lower bounds, expressed relative to nominal values."""
-    return self.lower - self.nominal
-
-  @property
-  def upper_rel(self):
-    """Returns upper bounds, expressed relative to nominal values."""
-    return self.upper - self.nominal
 
 
 class FastlinBoundPropagation(layer_bounds.BoundPropagation):
@@ -136,4 +47,4 @@ class FastlinBoundPropagation(layer_bounds.BoundPropagation):
     for _ in range(self._num_rounds):
       # Construct symbolic bounds and propagate them.
       super(FastlinBoundPropagation, self).propagate_bounds(
-          network, SymbolicBounds.convert(in_bounds))
+          network, ibp.RelativeSymbolicBounds.convert(in_bounds))

@@ -57,3 +57,6 @@ Deep Networks." _in UAI, 2018, pp. 550–559_.
 In addition to the people involved in the original publication, we would like
 to thank Chongli Qin for her contributions.
 
+## Disclaimer
+
+This is not an official Google product.

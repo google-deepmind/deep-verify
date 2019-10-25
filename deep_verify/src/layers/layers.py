@@ -23,6 +23,8 @@ import abc
 import collections
 
 from deep_verify.src import common
+from interval_bound_propagation import layer_utils
+import six
 import sonnet as snt
 import tensorflow as tf
 
@@ -32,9 +34,9 @@ import tensorflow as tf
 ObjectiveWeights = collections.namedtuple('ObjectiveWeights', ['w', 'b'])
 
 
+@six.add_metaclass(abc.ABCMeta)
 class VerifiableLayer(object):
   """Abstract class for dual layers."""
-  __metaclass__ = abc.ABCMeta
 
   def __init__(self):
     self._no_duals = False
@@ -46,11 +48,11 @@ class VerifiableLayer(object):
 
   @abc.abstractproperty
   def input_node(self):
-    """Returns a `node_with_bounds.Node` for the layer's inputs."""
+    """Returns an `ibp.VerifiableWrapper` for the previous layer's outputs."""
 
   @abc.abstractproperty
   def output_node(self):
-    """Returns a `node_with_bounds.Node` for the layer's outputs."""
+    """Returns an `ibp.VerifiableWrapper` for this layer's outputs."""
 
   @property
   def input_shape(self):
@@ -106,6 +108,7 @@ class VerifiableLayer(object):
     return tf.no_op()
 
 
+@six.add_metaclass(abc.ABCMeta)
 class CustomOp(object):
   """Function or operation with a different implementation for each layer type.
 
@@ -115,7 +118,6 @@ class CustomOp(object):
   so that the same visitor instance can be used multiple times with different
   arguments.
   """
-  __metaclass__ = abc.ABCMeta
 
   def visit_linear(self, layer, w, b, *args, **kwargs):
     """Callback for `Linear`."""
@@ -138,9 +140,9 @@ class CustomOp(object):
     """Callback for `Activation`."""
 
 
+@six.add_metaclass(abc.ABCMeta)
 class SingleVerifiableLayer(VerifiableLayer):
   """Dual layer for a single layer of the underlying network."""
-  __metaclass__ = abc.ABCMeta
 
   def __init__(self, input_node, output_node, module,
                batch_norm=None, reshape=False):
@@ -177,13 +179,13 @@ class SingleVerifiableLayer(VerifiableLayer):
 
   def backward_prop_batchnorm(self, y):
     if self.batch_norm is not None:
-      w, _ = common.decode_batchnorm(self.batch_norm)
+      w, _ = layer_utils.decode_batchnorm(self.batch_norm)
       y = y * tf.cast(w, y.dtype)
     return y
 
   def backward_prop_batchnorm_bias(self, y, bias):
     if self.batch_norm is not None:
-      w, b = common.decode_batchnorm(self.batch_norm)
+      w, b = layer_utils.decode_batchnorm(self.batch_norm)
       bias = bias + tf.reduce_sum(y * tf.cast(b, y.dtype),
                                   axis=list(range(2, y.shape.ndims)))
       y = y * tf.cast(w, y.dtype)
@@ -194,9 +196,9 @@ class SingleVerifiableLayer(VerifiableLayer):
     """Double-dispatch: invokes a `visit_xxx` method on `op`."""
 
 
+@six.add_metaclass(abc.ABCMeta)
 class AffineLayer(SingleVerifiableLayer):
   """Layer that acts as an affine transform, e.g. linear or convolution."""
-  __metaclass__ = abc.ABCMeta
 
   @property
   def is_activation(self):
@@ -289,9 +291,9 @@ class Conv(AffineLayer):
       return tf.zeros(tf.shape(y)[:2], dtype=y.dtype)
 
   def flatten(self):
-    return common.materialise_conv(self._w, self._b,
-                                   input_shape=self.input_shape,
-                                   padding=self._padding, strides=self._strides)
+    return layer_utils.materialise_conv(
+        self._w, self._b, input_shape=self.input_shape,
+        padding=self._padding, strides=self._strides)
 
   def custom_op(self, op, *args, **kwargs):
     return op.visit_conv(self, self._w, self._b,

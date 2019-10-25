@@ -32,7 +32,6 @@ from deep_verify.src.bounds import naive_bounds
 from deep_verify.src.bounds.fastlin_bounds import FastlinBoundPropagation
 from deep_verify.src.bounds.layer_bounds import BoundPropagation
 from deep_verify.src.bounds.naive_bounds import input_bounds
-from deep_verify.src.bounds.naive_bounds import IntervalBounds
 from deep_verify.src.bounds.naive_bounds import NaiveBoundPropagation
 
 from deep_verify.src.common import with_explicit_update
