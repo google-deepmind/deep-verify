@@ -13,7 +13,7 @@ of the inputs up to some threshold.
 Deep-verify can be installed with the following command:
 
 ```bash
-pip install git+https://github.com/deepmind/deep-verify`
+pip install git+https://github.com/deepmind/deep-verify
 ```
 
 Deep-verify will work with both the CPU and GPU version of tensorflow and
