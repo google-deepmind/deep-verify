@@ -43,10 +43,9 @@ def with_explicit_update(volatile_value):
                            dtype=value.dtype,
                            trainable=False)
 
-  nest = tf.contrib.framework.nest
-  materialised_value = nest.map_structure(materialise, volatile_value)
-  update_op = tf.group(nest.flatten(
-      nest.map_structure(tf.assign, materialised_value, volatile_value)))
+  materialised_value = tf.nest.map_structure(materialise, volatile_value)
+  update_op = tf.group(tf.nest.flatten(
+      tf.nest.map_structure(tf.assign, materialised_value, volatile_value)))
   return materialised_value, update_op
 
 
@@ -201,10 +200,12 @@ def conv_transpose(y, kernel, result_shape, padding, strides):
         output_shape=([tf.shape(y_squeezed)[0]] + result_shape),
         padding=padding, strides=([1] + list(strides) + [1]))
   elif len(result_shape) == 2:
-    x = tf.contrib.nn.conv1d_transpose(
-        y_squeezed, kernel,
+    x = tf.nn.conv1d_transpose(
+        y_squeezed,
+        kernel,
         output_shape=([tf.shape(y_squeezed)[0]] + result_shape),
-        padding=padding, strides=strides[0])
+        padding=padding,
+        strides=strides[0])
   else:
     raise ValueError()
   return tf.reshape(x, shape=(
@@ -562,11 +563,13 @@ def conv1d_reduce_sum(x, input_length, padding, stride):
   diagonal_kernel = tf.reshape(
       tf.eye(kernel_length, dtype=x.dtype),
       shape=[kernel_length, 1, kernel_length])
-  lam_deconv = tf.contrib.nn.conv1d_transpose(
-      lam_squeezed, diagonal_kernel, output_shape=(
-          [num_classes * batch_size * input_channels] +
-          [input_length, 1]),
-      padding=padding, strides=stride)
+  lam_deconv = tf.nn.conv1d_transpose(
+      lam_squeezed,
+      diagonal_kernel,
+      output_shape=([num_classes * batch_size * input_channels] +
+                    [input_length, 1]),
+      padding=padding,
+      strides=stride)
 
   # The resulting de-convolution has shape
   # (num_classes*batch_size*in_layer_channels,

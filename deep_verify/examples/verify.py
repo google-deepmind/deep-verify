@@ -173,9 +173,8 @@ def verification_graph(classifier, epsilon,
   test_data_live = ibp.build_dataset(data_test,
                                      batch_size=test_batch_size,
                                      sequential=True)
-  tf.contrib.framework.nest.map_structure(
-      lambda x: x.set_shape([test_batch_size] + x.shape[1:]),
-      test_data_live)
+  tf.nest.map_structure(
+      lambda x: x.set_shape([test_batch_size] + x.shape[1:]), test_data_live)
   test_data, get_next_batch_op = deep_verify.with_explicit_update(
       test_data_live)
 
